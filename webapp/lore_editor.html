@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Редактор Лора Хуфы</title>
+    <style>
+        :root {
+            --bg: #1a1a2e;
+            --card-bg: #16213e;
+            --accent: #e94560;
+            --accent2: #0f3460;
+            --gold: #f5c518;
+            --text: #eaeaea;
+            --text-muted: #a0a0b0;
+            --border: #2a2a4a;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --info: #3498db;
+            --shadow: 0 4px 20px rgba(0,0,0,0.4);
+            --radius: 12px;
+            --transition: 0.25s ease;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 3px; }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--accent2), var(--card-bg));
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid var(--accent);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+        }
+        .header h1 {
+            font-size: 1.4em;
+            background: linear-gradient(135deg, var(--gold), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+        .header-stats {
+            display: flex;
+            gap: 14px;
+            font-size: 0.8em;
+            color: var(--text-muted);
+        }
+        .header-stats span { 
+            background: rgba(255,255,255,0.06);
+            padding: 5px 10px;
+            border-radius: 20px;
+            white-space: nowrap;
+        }
+        .header-stats b { color: var(--gold); }
+
+        /* Tab Navigation */
+        .tab-nav {
+            display: flex;
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto;
+            position: sticky;
+            top: 61px;
+            z-index: 99;
+        }
+        .tab-btn {
+            flex: 1;
+            min-width: 90px;
+            padding: 12px 16px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.85em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            border-bottom: 3px solid transparent;
+            white-space: nowrap;
+            text-align: center;
+        }
+        .tab-btn:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+        .tab-btn.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+            background: rgba(233,69,96,0.08);
+        }
+        .tab-btn .emoji { font-size: 1.2em; display: block; }
+
+        /* Main Content */
+        .main-content {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+        .tab-panel { display: none; animation: fadeIn 0.3s ease; }
+        .tab-panel.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 18px;
+            margin-bottom: 14px;
+            box-shadow: var(--shadow);
+        }
+        .card h3 {
+            color: var(--gold);
+            margin-bottom: 10px;
+            font-size: 1.05em;
+        }
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 12px;
+        }
+
+        /* Forms */
+        label {
+            display: block;
+            font-size: 0.8em;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px 14px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 0.9em;
+            font-family: inherit;
+            transition: var(--transition);
+            margin-bottom: 10px;
+        }
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(233,69,96,0.15);
+        }
+        textarea { min-height: 120px; resize: vertical; }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-family: inherit;
+        }
+        .btn-primary { background: var(--accent); color: #fff; }
+        .btn-primary:hover { background: #c0392b; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(233,69,96,0.4); }
+        .btn-secondary { background: var(--accent2); color: var(--text); }
+        .btn-secondary:hover { background: #1a4980; }
+        .btn-success { background: var(--success); color: #fff; }
+        .btn-success:hover { background: #27ae60; }
+        .btn-danger { background: var(--danger); color: #fff; }
+        .btn-danger:hover { background: #c0392b; }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+        .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-sm { padding: 6px 12px; font-size: 0.75em; }
+        .btn-xs { padding: 3px 8px; font-size: 0.7em; border-radius: 4px; }
+        .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+
+        /* Item List */
+        .item-list { list-style: none; }
+        .item-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 14px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            margin-bottom: 6px;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 1px solid transparent;
+        }
+        .item-row:hover {
+            background: rgba(255,255,255,0.06);
+            border-color: var(--accent);
+        }
+        .item-row.selected { border-color: var(--accent); background: rgba(233,69,96,0.1); }
+        .item-info { flex: 1; min-width: 0; }
+        .item-keyword { font-weight: 700; color: var(--gold); }
+        .item-category {
+            font-size: 0.7em;
+            color: var(--text-muted);
+            background: var(--bg);
+            padding: 2px 8px;
+            border-radius: 10px;
+            display: inline-block;
+            margin-left: 6px;
+        }
+        .item-preview {
+            font-size: 0.8em;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 3px;
+        }
+        .item-actions { display: flex; gap: 4px; flex-shrink: 0; }
+
+        /* Search */
+        .search-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .search-bar input { margin-bottom: 0; }
+
+        /* Links */
+        .link-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            margin-bottom: 4px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .link-type-badge {
+            font-size: 0.7em;
+            padding: 3px 10px;
+            border-radius: 12px;
+            background: var(--accent2);
+            color: var(--text);
+        }
+
+        /* Graph container */
+        #graph-container {
+            width: 100%;
+            height: 450px;
+            background: var(--bg);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+        #graph-container canvas { display: block; }
+        .graph-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+            font-size: 0.75em;
+            color: var(--text-muted);
+        }
+        .graph-legend span {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--card-bg);
+            color: var(--text);
+            padding: 12px 24px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            z-index: 999;
+            animation: slideUp 0.3s ease;
+            font-size: 0.85em;
+            font-weight: 600;
+            max-width: 90%;
+            text-align: center;
+        }
+        .toast.success { border-color: var(--success); }
+        .toast.error { border-color: var(--danger); }
+        @keyframes slideUp { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s ease;
+        }
+        .modal {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            width: 90%;
+            max-width: 550px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+        }
+        .modal h3 { margin-bottom: 14px; }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .header { padding: 12px 14px; }
+            .header h1 { font-size: 1.1em; }
+            .header-stats { gap: 6px; font-size: 0.7em; }
+            .tab-btn { padding: 10px 8px; font-size: 0.7em; }
+            .card { padding: 12px; }
+            .card-grid { grid-template-columns: 1fr; }
+            .btn { padding: 8px 14px; font-size: 0.8em; }
+            #graph-container { height: 300px; }
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 40px 20px;
+        }
+        .empty-state .icon { font-size: 3em; margin-bottom: 10px; display: block; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📖 Редактор Лора</h1>
+        <div class="header-stats" id="headerStats">
+            <span>📚 <b id="statWiki">0</b></span>
+            <span>🔗 <b id="statLinks">0</b></span>
+            <span>🏷 <b id="statCats">0</b></span>
+        </div>
+    </div>
+
+    <div class="tab-nav">
+        <button class="tab-btn active" data-tab="list"><span class="emoji">📋</span> Записи</button>
+        <button class="tab-btn" data-tab="create"><span class="emoji">✏️</span> Создать</button>
+        <button class="tab-btn" data-tab="links"><span class="emoji">🔗</span> Связи</button>
+        <button class="tab-btn" data-tab="graph"><span class="emoji">🗺</span> Граф</button>
+        <button class="tab-btn" data-tab="stats"><span class="emoji">📊</span> Статистика</button>
+    </div>
+
+    <div class="main-content">
+        <!-- Tab: List -->
+        <div class="tab-panel active" id="panel-list">
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="🔍 Поиск по ключу или описанию...">
+                <select id="filterCategory" style="width:auto;min-width:130px;">
+                    <option value="">Все категории</option>
+                </select>
+                <button class="btn btn-secondary" onclick="searchWiki()">🔍</button>
+            </div>
+            <div id="wikiList" class="card">
+                <div class="empty-state"><span class="icon">📭</span>Загрузка записей...</div>
+            </div>
+        </div>
+
+        <!-- Tab: Create/Edit -->
+        <div class="tab-panel" id="panel-create">
+            <div class="card">
+                <h3 id="createTitle">✏️ Новая запись</h3>
+                <label>Ключ (keyword)</label>
+                <input type="text" id="createKeyword" placeholder="Например: алхимия">
+                <label>Описание</label>
+                <textarea id="createDescription" placeholder="Подробное описание..."></textarea>
+                <label>Категория</label>
+                <select id="createCategory">
+                    <option value="общее">📚 Общее</option>
+                    <option value="персонаж">👤 Персонаж</option>
+                    <option value="локация">🏛️ Локация</option>
+                    <option value="предмет">💎 Предмет</option>
+                    <option value="фракция">🎭 Фракция</option>
+                    <option value="событие">📜 Событие</option>
+                    <option value="организация">🏢 Организация</option>
+                    <option value="существо">🐉 Существо</option>
+                    <option value="магия">🔮 Магия</option>
+                </select>
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="saveWikiEntry()">💾 Сохранить</button>
+                    <button class="btn btn-outline" onclick="resetCreateForm()">🗑 Очистить</button>
+                </div>
+                <input type="hidden" id="editModeKeyword" value="">
+            </div>
+        </div>
+
+        <!-- Tab: Links -->
+        <div class="tab-panel" id="panel-links">
+            <div class="card">
+                <h3>🔗 Управление связями</h3>
+                <label>Выберите запись для просмотра связей:</label>
+                <input type="text" id="linksSearchKeyword" placeholder="Введите ключ..." oninput="loadLinksForKeyword()">
+                <div id="linksList" style="margin-top:12px;">
+                    <div class="empty-state"><span class="icon">🔍</span>Введите ключ для просмотра связей</div>
+                </div>
+            </div>
+            <div class="card">
+                <h3>➕ Создать связь</h3>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                    <div>
+                        <label>Источник</label>
+                        <input type="text" id="linkSource" placeholder="Ключ источника">
+                    </div>
+                    <div>
+                        <label>Цель</label>
+                        <input type="text" id="linkTarget" placeholder="Ключ цели">
+                    </div>
+                </div>
+                <label>Тип связи</label>
+                <select id="linkType">
+                    <option value="связан">🔗 Связан</option>
+                    <option value="враг">⚔️ Враг</option>
+                    <option value="друг">🤝 Друг</option>
+                    <option value="союзник">🛡️ Союзник</option>
+                    <option value="находится_в">📍 Находится в</option>
+                    <option value="владеет">💎 Владеет</option>
+                    <option value="часть">🧩 Часть</option>
+                </select>
+                <button class="btn btn-primary" onclick="createLink()">🔗 Создать связь</button>
+            </div>
+        </div>
+
+        <!-- Tab: Graph -->
+        <div class="tab-panel" id="panel-graph">
+            <div class="card">
+                <h3>🗺 Граф Лора</h3>
+                <div id="graph-container">
+                    <canvas id="graphCanvas"></canvas>
+                </div>
+                <div class="graph-legend">
+                    <span><span class="legend-dot" style="background:#f5c518;"></span> Персонажи</span>
+                    <span><span class="legend-dot" style="background:#3498db;"></span> Локации</span>
+                    <span><span class="legend-dot" style="background:#2ecc71;"></span> Предметы</span>
+                    <span><span class="legend-dot" style="background:#e74c3c;"></span> Фракции</span>
+                    <span><span class="legend-dot" style="background:#9b59b6;"></span> Магия/Существа</span>
+                    <span><span class="legend-dot" style="background:#95a5a6;"></span> Прочее</span>
+                </div>
+                <button class="btn btn-outline btn-sm" onclick="renderGraph()" style="margin-top:10px;">🔄 Обновить граф</button>
+            </div>
+        </div>
+
+        <!-- Tab: Stats -->
+        <div class="tab-panel" id="panel-stats">
+            <div class="card-grid" id="statsGrid">
+                <div class="empty-state"><span class="icon">📊</span>Загрузка статистики...</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toastContainer"></div>
+    <div id="modalContainer"></div>
+
+    <script>
+        // ============================================================
+        // API CONFIG
+        // ============================================================
+        const API_BASE = window.location.origin;
+
+        // ============================================================
+        // STATE
+        // ============================================================
+        let allWikiData = [];
+        let allLinksData = [];
+        let currentStats = {};
+
+        // ============================================================
+        // INIT
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            setupTabs();
+            loadAllData();
+        });
+
+        function setupTabs() {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+                    btn.classList.add('active');
+                    document.getElementById(`panel-${btn.dataset.tab}`).classList.add('active');
+                    
+                    if (btn.dataset.tab === 'graph') renderGraph();
+                    if (btn.dataset.tab === 'stats') loadStats();
+                });
+            });
+        }
+
+        // ============================================================
+        // API HELPERS
+        // ============================================================
+        async function apiFetch(url, options = {}) {
+            try {
+                const res = await fetch(`${API_BASE}${url}`, {
+                    headers: { 'Content-Type': 'application/json' },
+                    ...options
+                });
+                return await res.json();
+            } catch (e) {
+                showToast('Ошибка соединения с сервером', 'error');
+                console.error(e);
+                return { success: false, error: e.message };
+            }
+        }
+
+        // ============================================================
+        // DATA LOADING
+        // ============================================================
+        async function loadAllData() {
+            const [wikiRes, linksRes, statsRes] = await Promise.all([
+                apiFetch('/api/wiki/all'),
+                apiFetch('/api/wiki/all_links'),
+                apiFetch('/api/stats')
+            ]);
+
+            if (wikiRes.success) {
+                allWikiData = wikiRes.data;
+                renderWikiList(allWikiData);
+                updateCategoryFilter();
+            }
+            if (linksRes.success) allLinksData = linksRes.data;
+            if (statsRes.success) {
+                currentStats = statsRes.data;
+                updateHeaderStats();
+            }
+        }
+
+        function updateHeaderStats() {
+            document.getElementById('statWiki').textContent = currentStats.total_wiki || 0;
+            document.getElementById('statLinks').textContent = currentStats.total_links || 0;
+            document.getElementById('statCats').textContent = (currentStats.categories || []).length;
+        }
+
+        function updateCategoryFilter() {
+            const cats = [...new Set(allWikiData.map(w => w.category))];
+            const select = document.getElementById('filterCategory');
+            select.innerHTML = '<option value="">Все категории</option>' +
+                cats.map(c => `<option value="${c}">${getCategoryEmoji(c)} ${c}</option>`).join('');
+
+            const createSelect = document.getElementById('createCategory');
+            // Already has all options statically
+        }
+
+        // ============================================================
+        // CATEGORY HELPERS
+        // ============================================================
+        const CATEGORY_EMOJIS = {
+            'персонаж': '👤', 'локация': '🏛️', 'предмет': '💎',
+            'фракция': '🎭', 'событие': '📜', 'организация': '🏢',
+            'существо': '🐉', 'магия': '🔮', 'общее': '📚'
+        };
+
+        function getCategoryEmoji(cat) {
+            return CATEGORY_EMOJIS[cat] || '📚';
+        }
+
+        // ============================================================
+        // WIKI LIST RENDERING
+        // ============================================================
+        function renderWikiList(data) {
+            const container = document.getElementById('wikiList');
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div class="empty-state"><span class="icon">📭</span>Нет записей. Создайте новую!</div>';
+                return;
+            }
+
+            container.innerHTML = `<ul class="item-list">${data.map(w => `
+                <li class="item-row" onclick="editWikiEntry('${escapeHtml(w.keyword)}')">
+                    <div class="item-info">
+                        <span class="item-keyword">${escapeHtml(w.keyword)}</span>
+                        <span class="item-category">${getCategoryEmoji(w.category)} ${w.category}</span>
+                        <div class="item-preview">${escapeHtml((w.description || '').substring(0, 80))}${w.description && w.description.length > 80 ? '...' : ''}</div>
+                    </div>
+                    <div class="item-actions">
+                        <button class="btn btn-outline btn-xs" onclick="event.stopPropagation(); editWikiEntry('${escapeHtml(w.keyword)}')" title="Редактировать">✏️</button>
+                        <button class="btn btn-danger btn-xs" onclick="event.stopPropagation(); deleteWikiEntry('${escapeHtml(w.keyword)}')" title="Удалить">🗑</button>
+                    </div>
+                </li>
+            `).join('')}</ul>`;
+        }
+
+        function searchWiki() {
+            const query = document.getElementById('searchInput').value.trim();
+            const category = document.getElementById('filterCategory').value;
+
+            let filtered = allWikiData;
+            if (query) {
+                const q = query.toLowerCase();
+                filtered = filtered.filter(w => 
+                    w.keyword.toLowerCase().includes(q) || 
+                    (w.description || '').toLowerCase().includes(q)
+                );
+            }
+            if (category) {
+                filtered = filtered.filter(w => w.category === category);
+            }
+            renderWikiList(filtered);
+        }
+
+        document.getElementById('searchInput').addEventListener('input', debounce(searchWiki, 300));
+        document.getElementById('filterCategory').addEventListener('change', searchWiki);
+
+        function debounce(fn, delay) {
+            let timer;
+            return function(...args) {
+                clearTimeout(timer);
+                timer = setTimeout(() => fn.apply(this, args), delay);
+            };
+        }
+
+        // ============================================================
+        // CREATE / EDIT
+        // ============================================================
+        async function editWikiEntry(keyword) {
+            const entry = allWikiData.find(w => w.keyword === keyword);
+            if (!entry) return;
+
+            document.getElementById('createTitle').textContent = '✏️ Редактирование записи';
+            document.getElementById('createKeyword').value = entry.keyword;
+            document.getElementById('createKeyword').readOnly = true;
+            document.getElementById('createDescription').value = entry.description || '';
+            document.getElementById('createCategory').value = entry.category || 'общее';
+            document.getElementById('editModeKeyword').value = entry.keyword;
+
+            // Switch to create tab
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.querySelector('[data-tab="create"]').classList.add('active');
+            document.getElementById('panel-create').classList.add('active');
+
+            document.getElementById('createDescription').focus();
+        }
+
+        function resetCreateForm() {
+            document.getElementById('createTitle').textContent = '✏️ Новая запись';
+            document.getElementById('createKeyword').value = '';
+            document.getElementById('createKeyword').readOnly = false;
+            document.getElementById('createDescription').value = '';
+            document.getElementById('createCategory').value = 'общее';
+            document.getElementById('editModeKeyword').value = '';
+        }
+
+        async function saveWikiEntry() {
+            const keyword = document.getElementById('createKeyword').value.trim().toLowerCase();
+            const description = document.getElementById('createDescription').value.trim();
+            const category = document.getElementById('createCategory').value;
+            const editMode = document.getElementById('editModeKeyword').value;
+
+            if (!keyword || !description) {
+                showToast('Ключ и описание обязательны!', 'error');
+                return;
+            }
+
+            let res;
+            if (editMode) {
+                // Update existing
+                res = await apiFetch(`/api/wiki/update/${encodeURIComponent(editMode)}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ description, category })
+                });
+            } else {
+                // Create new
+                res = await apiFetch('/api/wiki/create', {
+                    method: 'POST',
+                    body: JSON.stringify({ keyword, description, category, photo_id: null })
+                });
+            }
+
+            if (res.success) {
+                showToast(res.message || 'Сохранено!', 'success');
+                resetCreateForm();
+                await loadAllData();
+                // Switch to list tab
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+                document.querySelector('[data-tab="list"]').classList.add('active');
+                document.getElementById('panel-list').classList.add('active');
+            } else {
+                showToast(res.error || 'Ошибка сохранения', 'error');
+            }
+        }
+
+        async function deleteWikiEntry(keyword) {
+            showModal(
+                '🗑 Удалить запись?',
+                `<p>Вы уверены, что хотите удалить <b>${escapeHtml(keyword)}</b>?<br><small>Все связи с этой записью также будут удалены.</small></p>`,
+                async () => {
+                    const res = await apiFetch(`/api/wiki/delete/${encodeURIComponent(keyword)}`, { method: 'DELETE' });
+                    if (res.success) {
+                        showToast(res.message, 'success');
+                        await loadAllData();
+                    } else {
+                        showToast(res.error, 'error');
+                    }
+                }
+            );
+        }
+
+        // ============================================================
+        // LINKS
+        // ============================================================
+        async function loadLinksForKeyword() {
+            const keyword = document.getElementById('linksSearchKeyword').value.trim().toLowerCase();
+            const container = document.getElementById('linksList');
+
+            if (!keyword) {
+                container.innerHTML = '<div class="empty-state"><span class="icon">🔍</span>Введите ключ для просмотра связей</div>';
+                return;
+            }
+
+            const res = await apiFetch(`/api/wiki/links/${encodeURIComponent(keyword)}`);
+            if (!res.success || !res.data || res.data.length === 0) {
+                container.innerHTML = `<div class="empty-state"><span class="icon">🔗</span>Нет связей для «${escapeHtml(keyword)}»</div>`;
+                return;
+            }
+
+            container.innerHTML = res.data.map(l => `
+                <div class="link-row">
+                    <span>${l.direction === 'outgoing' ? '→' : '←'} <b style="color:#f5c518;">${escapeHtml(l.connected_to)}</b></span>
+                    <span class="link-type-badge">${l.link_type_name || l.link_type}</span>
+                    <button class="btn btn-danger btn-xs" onclick="event.stopPropagation(); deleteLink('${escapeHtml(l.source)}', '${escapeHtml(l.target)}')">🗑</button>
+                </div>
+            `).join('');
+        }
+
+        async function createLink() {
+            const source = document.getElementById('linkSource').value.trim().toLowerCase();
+            const target = document.getElementById('linkTarget').value.trim().toLowerCase();
+            const linkType = document.getElementById('linkType').value;
+
+            if (!source || !target) {
+                showToast('Источник и цель обязательны!', 'error');
+                return;
+            }
+            if (source === target) {
+                showToast('Нельзя создать связь с самим собой!', 'error');
+                return;
+            }
+
+            const res = await apiFetch('/api/links/create', {
+                method: 'POST',
+                body: JSON.stringify({ source, target, link_type: linkType })
+            });
+
+            if (res.success) {
+                showToast(res.message, 'success');
+                document.getElementById('linkSource').value = '';
+                document.getElementById('linkTarget').value = '';
+                document.getElementById('linksSearchKeyword').value = source;
+                await loadAllData();
+                loadLinksForKeyword();
+            } else {
+                showToast(res.error, 'error');
+            }
+        }
+
+        async function deleteLink(source, target) {
+            const res = await apiFetch('/api/links/delete', {
+                method: 'DELETE',
+                body: JSON.stringify({ source, target })
+            });
+            if (res.success) {
+                showToast('Связь удалена', 'success');
+                await loadAllData();
+                loadLinksForKeyword();
+            } else {
+                showToast(res.error || 'Ошибка', 'error');
+            }
+        }
+
+        // ============================================================
+        // GRAPH
+        // ============================================================
+        function renderGraph() {
+            const container = document.getElementById('graph-container');
+            const canvas = document.getElementById('graphCanvas');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+
+            if (allWikiData.length === 0) {
+                ctx.fillStyle = '#a0a0b0';
+                ctx.font = '16px "Segoe UI"';
+                ctx.textAlign = 'center';
+                ctx.fillText('Нет данных для отображения графа', canvas.width / 2, canvas.height / 2);
+                return;
+            }
+
+            // Graph layout
+            const nodes = allWikiData.map((w, i) => ({
+                id: w.keyword,
+                label: w.keyword.length > 15 ? w.keyword.substring(0, 13) + '..' : w.keyword,
+                category: w.category,
+                x: 0, y: 0
+            }));
+
+            const nodeMap = {};
+            nodes.forEach(n => nodeMap[n.id] = n);
+
+            // Filter valid links
+            const validLinks = allLinksData.filter(l => nodeMap[l.source] && nodeMap[l.target]);
+
+            // Layout: circular force-directed
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = Math.min(centerX, centerY) * 0.75;
+            const angleStep = (2 * Math.PI) / Math.max(nodes.length, 1);
+
+            nodes.forEach((n, i) => {
+                n.x = centerX + radius * Math.cos(i * angleStep - Math.PI / 2);
+                n.y = centerY + radius * Math.sin(i * angleStep - Math.PI / 2);
+            });
+
+            // Category colors
+            const catColors = {
+                'персонаж': '#f5c518',
+                'локация': '#3498db',
+                'предмет': '#2ecc71',
+                'фракция': '#e74c3c',
+                'событие': '#e67e22',
+                'организация': '#1abc9c',
+                'существо': '#9b59b6',
+                'магия': '#8e44ad',
+                'общее': '#95a5a6'
+            };
+
+            // Clear
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw links
+            validLinks.forEach(l => {
+                const src = nodeMap[l.source];
+                const tgt = nodeMap[l.target];
+                if (!src || !tgt) return;
+
+                ctx.beginPath();
+                ctx.moveTo(src.x, src.y);
+                ctx.lineTo(tgt.x, tgt.y);
+                ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            });
+
+            // Draw nodes
+            nodes.forEach(n => {
+                const color = catColors[n.category] || '#95a5a6';
+
+                // Glow
+                ctx.beginPath();
+                ctx.arc(n.x, n.y, 22, 0, 2 * Math.PI);
+                ctx.fillStyle = color + '30';
+                ctx.fill();
+
+                // Node
+                ctx.beginPath();
+                ctx.arc(n.x, n.y, 14, 0, 2 * Math.PI);
+                ctx.fillStyle = color;
+                ctx.fill();
+                ctx.strokeStyle = '#1a1a2e';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Label
+                ctx.fillStyle = '#eaeaea';
+                ctx.font = 'bold 10px "Segoe UI"';
+                ctx.textAlign = 'center';
+                ctx.fillText(n.label, n.x, n.y + 26);
+            });
+        }
+
+        window.addEventListener('resize', () => {
+            const activeTab = document.querySelector('.tab-panel.active');
+            if (activeTab && activeTab.id === 'panel-graph') {
+                renderGraph();
+            }
+        });
+
+        // ============================================================
+        // STATS
+        // ============================================================
+        async function loadStats() {
+            const res = await apiFetch('/api/stats');
+            if (!res.success) return;
+
+            currentStats = res.data;
+            updateHeaderStats();
+
+            const grid = document.getElementById('statsGrid');
+            grid.innerHTML = `
+                <div class="card">
+                    <h3>📚 Всего записей</h3>
+                    <p style="font-size:2.5em;font-weight:800;color:var(--gold);">${currentStats.total_wiki}</p>
+                </div>
+                <div class="card">
+                    <h3>🔗 Всего связей</h3>
+                    <p style="font-size:2.5em;font-weight:800;color:var(--accent);">${currentStats.total_links}</p>
+                </div>
+                <div class="card">
+                    <h3>🎭 Игроков</h3>
+                    <p style="font-size:2.5em;font-weight:800;color:var(--info);">${currentStats.total_players || 0}</p>
+                </div>
+                <div class="card">
+                    <h3>📖 Историй</h3>
+                    <p style="font-size:2.5em;font-weight:800;color:var(--success);">${currentStats.total_stories || 0}</p>
+                </div>
+                <div class="card" style="grid-column: 1 / -1;">
+                    <h3>🏷 Категории</h3>
+                    ${(currentStats.categories || []).map(c => `
+                        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:0.9em;">
+                            <span>${c.emoji || '📚'} ${c.category}</span>
+                            <span style="font-weight:700;color:var(--gold);">${c.count}</span>
+                        </div>
+                    `).join('') || '<p style="color:var(--text-muted);">Нет категорий</p>'}
+                </div>
+                <div class="card" style="grid-column: 1 / -1; text-align: center;">
+                    <p style="color:var(--text-muted);">Топ-5 записей по длине описания:</p>
+                    ${allWikiData
+                        .sort((a, b) => (b.description || '').length - (a.description || '').length)
+                        .slice(0, 5)
+                        .map((w, i) => `
+                            <div style="padding:3px 0;font-size:0.8em;">
+                                <b>${i + 1}.</b> ${escapeHtml(w.keyword)} — ${(w.description || '').length} симв.
+                            </div>
+                        `).join('')}
+                </div>
+            `;
+        }
+
+        // ============================================================
+        // TOAST
+        // ============================================================
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(-50%) translateY(20px)';
+                toast.style.transition = '0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        }
+
+        // ============================================================
+        // MODAL
+        // ============================================================
+        function showModal(title, content, onConfirm) {
+            const container = document.getElementById('modalContainer');
+            container.innerHTML = `
+                <div class="modal-overlay" onclick="closeModal()">
+                    <div class="modal" onclick="event.stopPropagation()">
+                        <h3>${title}</h3>
+                        <div>${content}</div>
+                        <div class="btn-group" style="margin-top:16px;">
+                            <button class="btn btn-danger" id="modalConfirmBtn">Подтвердить</button>
+                            <button class="btn btn-outline" onclick="closeModal()">Отмена</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('modalConfirmBtn').addEventListener('click', () => {
+                closeModal();
+                if (onConfirm) onConfirm();
+            });
+        }
+
+        function closeModal() {
+            document.getElementById('modalContainer').innerHTML = '';
+        }
+
+        // ============================================================
+        // UTILS
+        // ============================================================
+        function escapeHtml(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+  </html>
